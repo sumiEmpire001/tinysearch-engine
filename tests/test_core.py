@@ -29,5 +29,23 @@ class SearchTests(unittest.TestCase):
             index.search("x", operator="xor")
         self.assertEqual(tokenize("Hello, WORLD!"), ["hello", "world"])
 
+
+    def test_unicode_and_stable_order(self):
+        index = SearchIndex()
+        index.add("z", "CAFÉ 東京")
+        index.add("a", "café 東京")
+        self.assertEqual([r["id"] for r in index.search("CAFÉ")], ["a", "z"])
+        self.assertEqual(len(index.search("東京", operator="and")), 2)
+
+    def test_empty_document_and_query(self):
+        index = SearchIndex()
+        index.add("empty", "")
+        self.assertEqual(index.search(""), [])
+        self.assertEqual(index.search("missing"), [])
+        with self.assertRaises(TypeError):
+            index.add("bad", None)
+        with self.assertRaises(ValueError):
+            index.search("x", limit=True)
+
 if __name__ == "__main__":
     unittest.main()
